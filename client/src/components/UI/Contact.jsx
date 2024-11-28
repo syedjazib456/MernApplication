@@ -8,6 +8,7 @@ function Contact(){
     
     //getting user Authenticated Data using Context API
     const {user,userauthtoken} = useAuth();
+    console.log(user);
      //for setting authenticated user data
      const [userData,SetUserData] = useState(true);
 

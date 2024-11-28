@@ -1,4 +1,4 @@
-const multer = require('multer');
+const multer = require('multer');//npm install multer
 const path = require('path');
 // Set up storage for the uploaded images
 const storage = multer.diskStorage({

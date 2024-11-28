@@ -34,7 +34,7 @@ function AdminRegister(){
     const handleinput = (e)=>{
     let name = e.target.name;
     let value = e.target.value;
-    let files = e.target.files;
+    let files = e.target.files;//*** */
     if(name==='image'){
     SetAdmin({
       

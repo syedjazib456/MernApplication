@@ -44,8 +44,7 @@ function Header() {
                 <NavLink
                   className="nav-link"
                   to="/logout"
-                  onClick={(e) => {
-                
+                  onClick={(e) => {               
                     logoutUser(); // Call logout function
                     user="";//x
                   }}

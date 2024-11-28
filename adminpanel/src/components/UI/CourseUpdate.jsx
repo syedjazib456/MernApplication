@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../store/Auth";
 const baseURL = import.meta.env.VITE_API_URL;
+
 const CourseUpdate = () => {
   const { authorizationtoken } = useAuth();
   const navigate = useNavigate();
@@ -13,7 +14,8 @@ const CourseUpdate = () => {
     coursename: "",
     coursedesc: "",
     courseinstruct: "",
-    images: [], // Store existing and new images
+    existingImages: [], // Only URLs of existing images
+    newImages: [], // Newly uploaded files
   });
 
   // Fetch course details by ID
@@ -25,12 +27,12 @@ const CourseUpdate = () => {
           { headers: { Authorization: authorizationtoken } }
         );
         const data = response.data.msg;
-        console.log(data);
         setCourse({
           coursename: data.coursename || "",
           coursedesc: data.coursedesc || "",
           courseinstruct: data.courseinstruct || "",
-          images: data.courseimages || [], // Existing images as URLs
+          existingImages: data.courseimages || [], // Set existing images
+          newImages: [], // Initialize empty
         });
       } catch (error) {
         console.error(error);
@@ -47,7 +49,7 @@ const CourseUpdate = () => {
     if (name === "images" && files) {
       setCourse((prev) => ({
         ...prev,
-        images: [...prev.images, ...Array.from(files)], // Append new files
+        newImages: [...prev.newImages, ...Array.from(files)], // Append new files
       }));
     } else {
       setCourse((prev) => ({ ...prev, [name]: value }));
@@ -55,11 +57,18 @@ const CourseUpdate = () => {
   };
 
   // Remove image
-  const removeImage = (index) => {
-    setCourse((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
+  const removeImage = (type, index) => {
+    if (type === "existing") {
+      setCourse((prev) => ({
+        ...prev,
+        existingImages: prev.existingImages.filter((_, i) => i !== index),
+      }));
+    } else if (type === "new") {
+      setCourse((prev) => ({
+        ...prev,
+        newImages: prev.newImages.filter((_, i) => i !== index),
+      }));
+    }
   };
 
   // Handle form submission
@@ -71,10 +80,12 @@ const CourseUpdate = () => {
     formData.append("coursedesc", course.coursedesc);
     formData.append("courseinstruct", course.courseinstruct);
 
-    course.images.forEach((image) => {
-      if (image instanceof File) {
-        formData.append("images", image); // Append only new images
-      }
+    // Add existing images that are not removed
+    formData.append("existingImages", JSON.stringify(course.existingImages));
+
+    // Add new images for upload
+    course.newImages.forEach((image) => {
+      formData.append("images", image);
     });
 
     try {
@@ -146,27 +157,39 @@ const CourseUpdate = () => {
         </div>
         {/* Image Previews */}
         <div className="image-previews">
-  {course.images.map((image, index) => (
-    <div key={index} className="image-preview">
-    <img
-        src={
-          typeof image === "string" // Check if it's a previous image (URL string)
-            ? `${baseURL}/${image}` // Add base URL for server-hosted images
-            : URL.createObjectURL(image) // For newly added files
-        }
-        alt={`preview-${index}`}
-        style={{ width: "100px", height: "100px", margin: "5px" }}
-      />
-      <button
-        type="button"
-        className="btn btn-danger btn-sm"
-        onClick={() => removeImage(index)}
-      >
-        x
-      </button>
-    </div>
-  ))}
-</div>
+          {course.existingImages.map((image, index) => (
+            <div key={index} className="image-preview">
+              <img
+                src={`${baseURL}/${image}`}
+                alt={`preview-${index}`}
+                style={{ width: "100px", height: "100px", margin: "5px" }}
+              />
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                onClick={() => removeImage("existing", index)}
+              >
+                x
+              </button>
+            </div>
+          ))}
+          {course.newImages.map((image, index) => (
+            <div key={index} className="image-preview">
+              <img
+                src={URL.createObjectURL(image)}
+                alt={`preview-${index}`}
+                style={{ width: "100px", height: "100px", margin: "5px" }}
+              />
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                onClick={() => removeImage("new", index)}
+              >
+                x
+              </button>
+            </div>
+          ))}
+        </div>
         <button type="submit" className="btn btn-primary">
           Update Course
         </button>
